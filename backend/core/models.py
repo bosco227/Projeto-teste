@@ -51,8 +51,12 @@ class Barbeiro(models.Model):
     especialidade = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True, null=True)
 
+    def total_cortes(self):
+        return self.agendamentos.filter(status='concluido').count()
+
     def __str__(self):
-        return f"{self.nome} ({self.barbearia.nome_fantasia})"
+        return self.nome
+
 
 
 # =========================

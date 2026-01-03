@@ -1,46 +1,43 @@
-// src/pages/cliente/Barbearia.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { api } from "../../api/api";
-import CardBarbeiro from "../../components/Barbearia/CardBarbeiro";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 
 export default function Barbearia() {
-  const { id } = useParams(); // id da barbearia
-  const [barbearia, setBarbearia] = useState(null);
+  const { id } = useParams();
   const [barbeiros, setBarbeiros] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const resBarbearia = await api.get(`/barbearias/${id}`);
-        setBarbearia(resBarbearia.data);
-
-        const resBarbeiros = await api.get(`/barbearias/${id}/barbeiros`);
-        setBarbeiros(resBarbeiros.data);
-      } catch (error) {
-        console.error("Erro ao carregar barbearia:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
+    api
+      .get(`/barbearias/${id}/barbeiros/`)
+      .then((res) => setBarbeiros(res.data));
   }, [id]);
 
-  if (loading) return <p className="p-4">Carregando...</p>;
-  if (!barbearia) return <p className="p-4">Barbearia não encontrada.</p>;
-
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{barbearia.nome_fantasia}</h1>
-      <p className="mb-6">{barbearia.endereco}</p>
+    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      {barbeiros.map((b) => (
+        <div key={b.id} className="border rounded-xl p-4 flex gap-4">
+          <img
+            src={b.foto_url || "/avatar.png"}
+            className="w-20 h-20 rounded-full object-cover"
+          />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {barbeiros.map((b) => (
-          <CardBarbeiro key={b.id} barbeiro={b} />
-        ))}
-      </div>
+          <div className="flex-1">
+            <h3 className="font-semibold">{b.nome}</h3>
+            <p className="text-sm text-gray-600">{b.especialidade}</p>
+            <p className="text-xs mt-1">
+              ✂️ {b.total_cortes} cortes realizados
+            </p>
+
+            <button
+              className="mt-3 w-full bg-black text-white py-2 rounded-lg"
+              onClick={() => navigate(`/agendar/${b.id}`)}
+            >
+              Agendar
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,20 +1,59 @@
+// src/routes/AppRoutes.jsx
 import { Routes, Route } from "react-router-dom";
-import Mapa from "../pages/cliente/Mapa";
+
+/* Cliente */
+import Home from "../pages/cliente/Home";
+import Barbearias from "../pages/cliente/Barbearias";
 import Barbearia from "../pages/cliente/Barbearia";
 import Agendamento from "../pages/cliente/Agendamento";
-import MeusAgendamentos from "../pages/cliente/MeusAgendamentos";
 
-import Dashboard from "../pages/barbearia/Dashboard";
+/* Admin */
+import AdminLogin from "../pages/admin/Login";
+import Dashboard from "../pages/admin/Dashboard";
+import AdminAgendamentos from "../pages/admin/Agendamentos";
+import Barbeiros from "../pages/admin/Barbeiros";
+
+/* Auth */
+import RequireAdmin from "../auth/RequireAdmin";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Mapa />} />
-      <Route path="/barbearia/:id" element={<Barbearia />} />
+      {/* ================= CLIENTE ================= */}
+      <Route path="/" element={<Home />} />
+      <Route path="/barbearias" element={<Barbearias />} />
+      <Route path="/barbearias/:id" element={<Barbearia />} />
       <Route path="/agendar/:barbeiroId" element={<Agendamento />} />
-      <Route path="/meus-agendamentos" element={<MeusAgendamentos />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
+      {/* ================= ADMIN ================= */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      <Route
+        path="/admin/dashboard"
+        element={
+          <RequireAdmin>
+            <Dashboard />
+          </RequireAdmin>
+        }
+      />
+
+      <Route
+        path="/admin/agendamentos"
+        element={
+          <RequireAdmin>
+            <AdminAgendamentos />
+          </RequireAdmin>
+        }
+      />
+
+      <Route
+        path="/admin/barbeiros"
+        element={
+          <RequireAdmin>
+            <Barbeiros />
+          </RequireAdmin>
+        }
+      />
     </Routes>
   );
 }

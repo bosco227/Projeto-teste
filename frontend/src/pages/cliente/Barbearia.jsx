@@ -1,41 +1,52 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import api from "../../api/api";
+import barbeirosMock from "../../mocks/barbeirosMock";
 
 export default function Barbearia() {
   const { id } = useParams();
   const [barbeiros, setBarbeiros] = useState([]);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
-      .get(`/barbearias/${id}/barbeiros/`)
-      .then((res) => setBarbeiros(res.data));
+      .get(`/${id}/barbeiros/`)
+      .then((res) => {
+        if (res.data && res.data.length > 0) {
+          setBarbeiros(res.data);
+        } else {
+          setBarbeiros(barbeirosMock);
+        }
+      })
+      .catch(() => {
+        setBarbeiros(barbeirosMock);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [id]);
 
+  if (loading) return <p>Carregando barbeiros...</p>;
+
   return (
-    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div style={{ padding: "16px" }}>
+      <h1>Barbeiros disponíveis</h1>
+
       {barbeiros.map((b) => (
-        <div key={b.id} className="border rounded-xl p-4 flex gap-4">
-          <img
-            src={b.foto_url || "/avatar.png"}
-            className="w-20 h-20 rounded-full object-cover"
-          />
+        <div
+          key={b.id}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "12px",
+            marginBottom: "12px",
+          }}
+        >
+          <h3>{b.nome}</h3>
+          <p>{b.especialidade}</p>
+          <p>Total de cortes: {b.total_cortes}</p>
 
-          <div className="flex-1">
-            <h3 className="font-semibold">{b.nome}</h3>
-            <p className="text-sm text-gray-600">{b.especialidade}</p>
-            <p className="text-xs mt-1">
-              ✂️ {b.total_cortes} cortes realizados
-            </p>
-
-            <button
-              className="mt-3 w-full bg-black text-white py-2 rounded-lg"
-              onClick={() => navigate(`/agendar/${b.id}`)}
-            >
-              Agendar
-            </button>
-          </div>
+          <Link to={`/agendar/${b.id}`}>Agendar horário →</Link>
         </div>
       ))}
     </div>

@@ -1,51 +1,84 @@
 import { useEffect, useState } from "react";
 import api from "../../api/api";
 
-export default function Agendamentos() {
+export default function AdminAgendamentos() {
   const [agendamentos, setAgendamentos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const carregar = () => {
-    api.get("/admin/agendamentos/").then((res) => setAgendamentos(res.data));
-  };
+  function carregar() {
+    setLoading(true);
+    api
+      .get("/dashboard/agendamentos/")
+      .then((res) => setAgendamentos(res.data))
+      .finally(() => setLoading(false));
+  }
+
+  function atualizarStatus(id, status) {
+    api
+      .patch(`/dashboard/agendamentos/${id}/status/`, { status })
+      .then(carregar)
+      .catch(() => alert("Erro ao atualizar status"));
+  }
 
   useEffect(() => {
     carregar();
   }, []);
 
-  const atualizar = async (id, status) => {
-    await api.patch(`/agendamentos/${id}/`, { status });
-    carregar();
-  };
-
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold">Agenda</h1>
+    <div style={{ padding: "16px" }}>
+      <h1>Agendamentos</h1>
 
-      {agendamentos.map((a) => (
-        <div key={a.id} className="border rounded p-4">
-          <p className="font-semibold">{a.cliente_nome}</p>
-          <p className="text-sm">
-            {a.barbeiro_nome} • {new Date(a.data_hora).toLocaleString()}
-          </p>
+      {loading && <p>Carregando...</p>}
 
-          {a.status === "pendente" && (
-            <div className="flex gap-2 mt-3">
-              <button
-                className="flex-1 bg-green-600 text-white py-2 rounded"
-                onClick={() => atualizar(a.id, "confirmado")}
-              >
-                Confirmar
-              </button>
-              <button
-                className="flex-1 bg-red-500 text-white py-2 rounded"
-                onClick={() => atualizar(a.id, "cancelado")}
-              >
-                Cancelar
-              </button>
+      {!loading && agendamentos.length === 0 && (
+        <p>Nenhum agendamento ainda.</p>
+      )}
+
+      {!loading &&
+        agendamentos.map((a) => (
+          <div
+            key={a.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "12px",
+              marginBottom: "8px",
+              borderRadius: "6px",
+            }}
+          >
+            <p>
+              <strong>Cliente:</strong> {a.cliente_username}
+            </p>
+            <p>
+              <strong>Barbeiro:</strong> {a.barbeiro_nome}
+            </p>
+            <p>
+              <strong>Data:</strong> {new Date(a.data_hora).toLocaleString()}
+            </p>
+            <p>
+              <strong>Status:</strong> {a.status}
+            </p>
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              {a.status !== "confirmado" && (
+                <button onClick={() => atualizarStatus(a.id, "confirmado")}>
+                  Confirmar
+                </button>
+              )}
+
+              {a.status !== "concluido" && (
+                <button onClick={() => atualizarStatus(a.id, "concluido")}>
+                  Concluir
+                </button>
+              )}
+
+              {a.status !== "cancelado" && (
+                <button onClick={() => atualizarStatus(a.id, "cancelado")}>
+                  Cancelar
+                </button>
+              )}
             </div>
-          )}
-        </div>
-      ))}
+          </div>
+        ))}
     </div>
   );
 }

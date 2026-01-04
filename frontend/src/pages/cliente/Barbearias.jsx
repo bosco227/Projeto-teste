@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
+import api from "../../api/api";
 
 export default function Barbearias() {
   const [barbearias, setBarbearias] = useState([]);

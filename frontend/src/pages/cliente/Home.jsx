@@ -1,36 +1,66 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../../api/axios";
-import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import api from "../../api/api";
 
 export default function Home() {
   const [barbearias, setBarbearias] = useState([]);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/barbearias/").then((res) => setBarbearias(res.data));
+    api
+      .get("/")
+      .then((res) => {
+        setBarbearias(res.data);
+      })
+      .catch((err) => {
+        console.error("Erro ao buscar barbearias", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  return (
-    <div className="h-screen">
-      <MapContainer center={[-3.7, -38.5]} zoom={13} className="h-full w-full">
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+  if (loading) {
+    return <p>Carregando mapa...</p>;
+  }
 
-        {barbearias.map((b) => (
-          <Marker key={b.id} position={[b.latitude, b.longitude]}>
-            <Popup>
-              <strong>{b.nome_fantasia}</strong>
-              <br />
-              <button
-                className="mt-2 text-blue-600"
-                onClick={() => navigate(`/barbearias/${b.id}`)}
-              >
-                Ver barbeiros
-              </button>
-            </Popup>
-          </Marker>
-        ))}
+  return (
+    <div style={{ height: "100vh", width: "100%" }}>
+      <MapContainer
+        center={[-3.7319, -38.5267]} // centro padrão (Fortaleza, pode trocar)
+        zoom={13}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution="&copy; OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {barbearias.map((barbearia) => {
+          // 🔥 FILTRO OBRIGATÓRIO
+          if (
+            barbearia.latitude === null ||
+            barbearia.longitude === null ||
+            barbearia.latitude === undefined ||
+            barbearia.longitude === undefined
+          ) {
+            return null;
+          }
+
+          return (
+            <Marker
+              key={barbearia.id}
+              position={[
+                Number(barbearia.latitude),
+                Number(barbearia.longitude),
+              ]}
+            >
+              <Popup>
+                <strong>{barbearia.nome}</strong>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );

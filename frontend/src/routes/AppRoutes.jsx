@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 
 /* Cliente */
 import Home from "../pages/cliente/Home";
-import Barbearias from "../pages/cliente/Barbearias";
 import Barbearia from "../pages/cliente/Barbearia";
 import Agendamento from "../pages/cliente/Agendamento";
 
@@ -21,7 +20,6 @@ export default function AppRoutes() {
     <Routes>
       {/* ================= CLIENTE ================= */}
       <Route path="/" element={<Home />} />
-      <Route path="/barbearias" element={<Barbearias />} />
       <Route path="/barbearias/:id" element={<Barbearia />} />
       <Route path="/agendar/:barbeiroId" element={<Agendamento />} />
 

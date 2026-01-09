@@ -1,54 +1,33 @@
+// src/pages/cliente/Barbearia.jsx
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import api from "../../api/api";
-import barbeirosMock from "../../mocks/barbeirosMock";
+import CardBarbeiro from "../../components/Barbearia/CardBarbeiro";
 
 export default function Barbearia() {
-  const { id } = useParams();
+  const { id } = useParams(); // id da barbearia
   const [barbeiros, setBarbeiros] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
-      .get(`/${id}/barbeiros/`)
-      .then((res) => {
-        if (res.data && res.data.length > 0) {
-          setBarbeiros(res.data);
-        } else {
-          setBarbeiros(barbeirosMock);
-        }
-      })
-      .catch(() => {
-        setBarbeiros(barbeirosMock);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .get(`/barbearias/${id}/barbeiros/`)
+      .then((res) => setBarbeiros(res.data))
+      .catch((err) => console.error("Erro ao carregar barbeiros", err))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <p>Carregando barbeiros...</p>;
+  if (loading) return <p className="p-4">Carregando...</p>;
 
   return (
-    <div style={{ padding: "16px" }}>
-      <h1>Barbeiros disponíveis</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-6">Barbeiros</h1>
 
-      {barbeiros.map((b) => (
-        <div
-          key={b.id}
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            padding: "12px",
-            marginBottom: "12px",
-          }}
-        >
-          <h3>{b.nome}</h3>
-          <p>{b.especialidade}</p>
-          <p>Total de cortes: {b.total_cortes}</p>
-
-          <Link to={`/agendar/${b.id}`}>Agendar horário →</Link>
-        </div>
-      ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {barbeiros.map((b) => (
+          <CardBarbeiro key={b.id} barbeiro={b} />
+        ))}
+      </div>
     </div>
   );
 }

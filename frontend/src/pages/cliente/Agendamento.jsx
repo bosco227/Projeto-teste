@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/api";
-import horariosMock from "../../mocks/horariosMock";
 
 export default function Agendamento() {
   const { barbeiroId } = useParams();
@@ -19,19 +18,12 @@ export default function Agendamento() {
 
     api
       .get(`/barbeiros/${barbeiroId}/horarios/?data=${data}`)
-      .then((res) => {
-        if (res.data && res.data.length > 0) {
-          setHorarios(res.data);
-        } else {
-          setHorarios(horariosMock);
-        }
+      .then((res) => setHorarios(res.data))
+      .catch((err) => {
+        console.error("Erro ao buscar horários", err);
+        setHorarios([]);
       })
-      .catch(() => {
-        setHorarios(horariosMock);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [data, barbeiroId]);
 
   function agendar() {
@@ -40,28 +32,22 @@ export default function Agendamento() {
       return;
     }
 
-    const dataHora = `${data}T${horarioSelecionado}:00`;
-
     api
-      .post("/agendamentos/", {
+      .post("agendamentos/", {
         barbeiro: barbeiroId,
-        data_hora: dataHora,
+        data_hora: `${data}T${horarioSelecionado}:00`,
       })
       .then(() => {
-        alert("Agendamento criado!");
+        alert("Agendamento criado com sucesso!");
         navigate("/");
       })
-      .catch(() => {
-        alert("Erro ao agendar");
-      });
+      .catch(() => alert("Erro ao criar agendamento"));
   }
 
   return (
-    <div style={{ padding: "16px" }}>
-      <h1>Agendar horário</h1>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Agendar horário</h1>
 
-      <label>Escolha a data:</label>
-      <br />
       <input
         type="date"
         value={data}
@@ -70,34 +56,25 @@ export default function Agendamento() {
 
       {loading && <p>Carregando horários...</p>}
 
-      {horarios.length > 0 && (
-        <>
-          <h3>Horários disponíveis</h3>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-            {horarios.map((h) => (
-              <button
-                key={h}
-                onClick={() => setHorarioSelecionado(h)}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border:
-                    horarioSelecionado === h
-                      ? "2px solid black"
-                      : "1px solid #ccc",
-                  background: horarioSelecionado === h ? "#ddd" : "#fff",
-                }}
-              >
-                {h}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="flex gap-2 flex-wrap mt-4">
+        {horarios.map((h) => (
+          <button
+            key={h}
+            onClick={() => setHorarioSelecionado(h)}
+            className={`px-3 py-2 rounded border ${
+              horarioSelecionado === h ? "bg-black text-white" : "bg-white"
+            }`}
+          >
+            {h}
+          </button>
+        ))}
+      </div>
 
-      <br />
-      <button onClick={agendar} style={{ marginTop: "16px" }}>
-        Confirmar agendamento
+      <button
+        onClick={agendar}
+        className="mt-6 bg-black text-white px-4 py-2 rounded"
+      >
+        Confirmar
       </button>
     </div>
   );

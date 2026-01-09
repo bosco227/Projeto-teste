@@ -71,10 +71,13 @@ class Agendamento(models.Model):
     )
 
     cliente = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='agendamentos'
-    )
+    User,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='agendamentos'
+)
+
     barbeiro = models.ForeignKey(
         Barbeiro,
         on_delete=models.CASCADE,

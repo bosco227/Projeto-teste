@@ -1,10 +1,9 @@
 from rest_framework import generics, permissions, status
-from django.db.models import Count, Q
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from django.db.models import Count, Q
 from datetime import datetime, time, timedelta
-
 from .permissions import IsBarbearia
 from .models import Barbearia, Barbeiro, Agendamento
 from .serializers import (
@@ -13,20 +12,28 @@ from .serializers import (
     AgendamentoSerializer
 )
 
-# =========================
-# MAPA - BARBEARIAS
-# =========================
-class BarbeariaListView(APIView):
-    def get(self, request):
-        return Response([
-            {"id": 1, "nome": "Barbearia do Tony"},
-            {"id": 2, "nome": "Barbearia do José"}
-        ])
+
+# =====================
+# BARBEARIAS
+# =====================
+class BarbeariaListView(generics.ListAPIView):
+    queryset = Barbearia.objects.all()
+    serializer_class = BarbeariaSerializer
+    permission_classes = [AllowAny]
 
 
-# =========================
-# BARBEIROS DA BARBEARIA
-# =========================
+class BarbeariaDetailView(generics.RetrieveAPIView):
+    queryset = Barbearia.objects.all()
+    serializer_class = BarbeariaSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Barbearia.objects.all()
+
+
+# =====================
+# BARBEIROS
+# =====================
 class BarbeiroListView(generics.ListAPIView):
     serializer_class = BarbeiroSerializer
     permission_classes = [AllowAny]
@@ -45,7 +52,6 @@ class BarbeiroListView(generics.ListAPIView):
 class BarbeiroDetailView(generics.RetrieveAPIView):
     serializer_class = BarbeiroSerializer
     permission_classes = [AllowAny]
-
     queryset = Barbeiro.objects.annotate(
         total_cortes=Count(
             'agendamentos',
@@ -54,12 +60,12 @@ class BarbeiroDetailView(generics.RetrieveAPIView):
     )
 
 
-# =========================
-# AGENDAMENTO (CLIENTE)
-# =========================
+# =====================
+# AGENDAMENTOS
+# =====================
 class AgendamentoCreateView(generics.CreateAPIView):
     serializer_class = AgendamentoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         serializer.save(
@@ -68,12 +74,9 @@ class AgendamentoCreateView(generics.CreateAPIView):
         )
 
 
-# =========================
-# MEUS AGENDAMENTOS
-# =========================
 class MeusAgendamentosView(generics.ListAPIView):
     serializer_class = AgendamentoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return Agendamento.objects.filter(
@@ -81,9 +84,6 @@ class MeusAgendamentosView(generics.ListAPIView):
         ).order_by('-data_hora')
 
 
-# =========================
-# DASHBOARD - AGENDAMENTOS DA BARBEARIA
-# =========================
 class BarbeariaAgendamentosView(generics.ListAPIView):
     serializer_class = AgendamentoSerializer
     permission_classes = [IsBarbearia]
@@ -94,9 +94,6 @@ class BarbeariaAgendamentosView(generics.ListAPIView):
         ).order_by('-data_hora')
 
 
-# =========================
-# ATUALIZAR STATUS DO AGENDAMENTO
-# =========================
 class AtualizarStatusAgendamentoView(APIView):
     permission_classes = [IsBarbearia]
 
@@ -114,9 +111,7 @@ class AtualizarStatusAgendamentoView(APIView):
 
         novo_status = request.data.get('status')
 
-        if novo_status not in [
-            'confirmado', 'concluido', 'cancelado'
-        ]:
+        if novo_status not in ['confirmado', 'concluido', 'cancelado']:
             return Response(
                 {'erro': 'Status inválido'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -125,19 +120,17 @@ class AtualizarStatusAgendamentoView(APIView):
         agendamento.status = novo_status
         agendamento.save()
 
-        return Response(
-            AgendamentoSerializer(agendamento).data
-        )
+        return Response(AgendamentoSerializer(agendamento).data)
 
 
-# =========================
-# HORÁRIOS DISPONÍVEIS
-# =========================
+# =====================
+# HORÁRIOS
+# =====================
 class HorariosDisponiveisView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, barbeiro_id):
-        data = request.query_params.get('data')  # YYYY-MM-DD
+        data = request.query_params.get('data')
 
         if not data:
             return Response(
@@ -146,7 +139,6 @@ class HorariosDisponiveisView(APIView):
             )
 
         data_base = datetime.strptime(data, '%Y-%m-%d').date()
-
         inicio = time(9, 0)
         fim = time(18, 0)
 

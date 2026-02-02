@@ -12,13 +12,30 @@ class User(AbstractUser):
         ('cliente', 'Cliente'),
         ('barbearia', 'Barbearia'),
     )
-
     tipo = models.CharField(max_length=20, choices=TIPO_USUARIO)
 
-    def __str__(self):
-        return f"{self.username} ({self.tipo})"
+    def is_cliente(self):
+        return self.tipo == 'cliente'
 
+    def is_barbearia(self):
+        return self.tipo == 'barbearia'
 
+class PerfilCliente(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='perfil_cliente'
+    )
+    cpf = models.CharField(max_length=11, unique=True)
+
+class PerfilBarbearia(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='perfil_barbearia'
+    )
+    cnpj = models.CharField(max_length=14, unique=True)
+    
 # =========================
 # BARBEARIA
 # =========================
@@ -26,7 +43,9 @@ class Barbearia(models.Model):
     owner = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='barbearia'
+        related_name='barbearia',
+        null=True,
+        blank=True
     )
     nome_fantasia = models.CharField(max_length=100)
     endereco = models.CharField(max_length=255, blank=True)

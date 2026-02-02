@@ -8,7 +8,9 @@ from .views import (
     HorariosDisponiveisView,
     MeusAgendamentosView,
     BarbeariaAgendamentosView,
-    AtualizarStatusAgendamentoView
+    AtualizarStatusAgendamentoView,
+    MeuPerfilView,
+    login_view,
 )
 
 urlpatterns = [
@@ -21,4 +23,7 @@ urlpatterns = [
     path('dashboard/agendamentos/', BarbeariaAgendamentosView.as_view()),
     path('dashboard/agendamentos/<int:pk>/status/', AtualizarStatusAgendamentoView.as_view()),
     path('barbeiros/<int:barbeiro_id>/horarios/', HorariosDisponiveisView.as_view()),
+    path("meu-perfil/", MeuPerfilView.as_view()),
+    path("login/", login_view),
 ]
+

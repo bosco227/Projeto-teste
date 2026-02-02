@@ -1,9 +1,8 @@
 from rest_framework.permissions import BasePermission
 
-
 class IsBarbearia(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and request.user.tipo == 'barbearia'
+            and request.user.is_barbearia()
         )

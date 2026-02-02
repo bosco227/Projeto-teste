@@ -144,3 +144,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTHENTICATION_BACKENDS = [
+    "core.auth_backends.DocumentoAuthBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../../api/api";
+import api from "../../api/apiPrivate";
 
 export default function Agendamento() {
   const { barbeiroId } = useParams();
@@ -11,6 +11,41 @@ export default function Agendamento() {
   const [horarioSelecionado, setHorarioSelecionado] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔐 Proteção: apenas cliente pode acessar
+  useEffect(() => {
+    async function verificarPerfil() {
+      const token = localStorage.getItem("token");
+      const perfil = localStorage.getItem("perfil");
+
+      if (!token) {
+        alert("Você precisa estar logado");
+        navigate("/login");
+        return;
+      }
+
+      // fallback seguro: perfil vem do backend se não existir
+      if (!perfil) {
+        try {
+          const res = await api.get("/meu-perfil/");
+          localStorage.setItem("perfil", res.data.perfil);
+
+          if (res.data.perfil !== "cliente") {
+            alert("Apenas clientes podem agendar");
+            navigate("/login");
+          }
+        } catch {
+          navigate("/login");
+        }
+      } else if (perfil !== "cliente") {
+        alert("Apenas clientes podem agendar");
+        navigate("/login");
+      }
+    }
+
+    verificarPerfil();
+  }, [navigate]);
+
+  // 📅 Buscar horários
   useEffect(() => {
     if (!data) return;
 
@@ -26,22 +61,36 @@ export default function Agendamento() {
       .finally(() => setLoading(false));
   }, [data, barbeiroId]);
 
-  function agendar() {
+  // ✂️ Criar agendamento
+  async function agendar() {
     if (!data || !horarioSelecionado) {
       alert("Selecione data e horário");
       return;
     }
 
-    api
-      .post("agendamentos/", {
+    try {
+      await api.post("/agendamentos/", {
         barbeiro: barbeiroId,
         data_hora: `${data}T${horarioSelecionado}:00`,
-      })
-      .then(() => {
-        alert("Agendamento criado com sucesso!");
-        navigate("/");
-      })
-      .catch(() => alert("Erro ao criar agendamento"));
+      });
+
+      alert("Agendamento criado com sucesso!");
+      navigate("/cliente");
+    } catch (err) {
+      console.error(err);
+
+      if (err.response?.status === 401) {
+        alert("Sessão expirada. Faça login novamente.");
+        localStorage.clear();
+        navigate("/login");
+      } else if (err.response?.status === 400) {
+        alert("Horário indisponível");
+      } else if (err.response?.status === 403) {
+        alert("Perfil não autorizado");
+      } else {
+        alert("Erro ao criar agendamento");
+      }
+    }
   }
 
   return (
@@ -52,6 +101,7 @@ export default function Agendamento() {
         type="date"
         value={data}
         onChange={(e) => setData(e.target.value)}
+        className="border p-2 rounded"
       />
 
       {loading && <p>Carregando horários...</p>}
@@ -61,8 +111,10 @@ export default function Agendamento() {
           <button
             key={h}
             onClick={() => setHorarioSelecionado(h)}
-            className={`px-3 py-2 rounded border ${
-              horarioSelecionado === h ? "bg-black text-white" : "bg-white"
+            className={`px-3 py-2 rounded border transition ${
+              horarioSelecionado === h
+                ? "bg-black text-white"
+                : "bg-white hover:bg-gray-100"
             }`}
           >
             {h}
